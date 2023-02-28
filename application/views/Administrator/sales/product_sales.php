@@ -147,6 +147,12 @@
 										<input type="radio" value="true" v-model="Is_IMEI" id="imei"> <label for="imei">IMEI Serial</label>
 									</div>
 								</div>
+								<div class="form-group">
+									<label class="col-sm-3 control-label no-padding-right"> Category </label>
+									<div class="col-sm-9">
+										<v-select @input="onChangeCategory" v-bind:options="categories" v-model="selectedCategory" label="ProductCategory_Name"></v-select>
+									</div>
+								</div>
 								<div class="form-group" v-if="Is_IMEI != 'true'">
 									<label class="col-sm-3 control-label no-padding-right"> Product </label>
 									<div class="col-sm-9">
@@ -506,6 +512,8 @@
 				productStock: '',
 				saleOnProgress: false,
 				Is_IMEI: false,
+				categories: [],
+				selectedCategory: null,
 				userType: '<?php echo $this->session->userdata("accountType"); ?>'
 			}
 		},
@@ -554,6 +562,7 @@
 		},
 		created() {
 			this.sales.salesDate = moment().format('YYYY-MM-DD');
+			this.getCategory();
 			this.getEmployees();
 			this.getBranches();
 			this.getCustomers();
@@ -571,8 +580,6 @@
 
 			calCulateCart() {
 				this.productTotal()
-				// 	alert()
-
 				// if(this.selectedIEMI.Product_SlNo<=0){
 				// 		alert("please select a product");
 				// 		return false;
@@ -582,6 +589,12 @@
 				//          var totalValue = numVal1- (numVal1 * numVal2)
 				// this.selectedIEMI.total  = totalValue.toFixed(2);
 				//           console.log(this.selectedIEMI.total)
+			},
+			getCategory() {
+				axios.get('/get_categories').then(res => {
+					this.categories = res.data;
+				})
+
 			},
 			getEmployees() {
 				axios.get('/get_employees').then(res => {
@@ -681,9 +694,16 @@
 				if (this.selectedCustomer != null && this.selectedCustomer.Customer_Type == "G") {
 					this.sales.due = 0;
 					this.sales.paid = this.sales.total;
-				}else{
+				} else {
 					this.sales.due = this.sales.total;
 					this.sales.paid = 0;
+				}
+			},
+			onChangeCategory(){
+				if(this.selectedCategory != null){
+					this.IMEIStore = this.products.filter(cat => cat.ProductCategory_ID == this.selectedCategory.ProductCategory_SlNo)
+				}else{
+					this.getProducts();
 				}
 			},
 			async productOnChange() {
