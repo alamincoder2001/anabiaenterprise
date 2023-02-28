@@ -701,7 +701,16 @@
 			},
 			onChangeCategory(){
 				if(this.selectedCategory != null){
-					this.IMEIStore = this.products.filter(cat => cat.ProductCategory_ID == this.selectedCategory.ProductCategory_SlNo)
+					console.log(this.products);
+					if(this.Is_IMEI == false){
+						this.IMEIStore = this.products.filter(cat => {
+							return cat.ProductCategory_ID == this.selectedCategory.ProductCategory_SlNo && cat.is_imei == 'false';
+						})
+					}else{
+						this.IMEIStore = this.products.filter(cat => {
+							return cat.ProductCategory_ID == this.selectedCategory.ProductCategory_SlNo && cat.is_imei == 'true';
+						})
+					}
 				}else{
 					this.getProducts();
 				}
@@ -951,7 +960,6 @@
 						}
 
 						this.cart.push(cartProduct);
-						console.log(this.cart)
 
 					})
 
