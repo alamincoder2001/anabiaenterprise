@@ -1782,14 +1782,12 @@ class Sales extends CI_Controller {
     public function getProfitLoss(){
         $data = json_decode($this->input->raw_input_stream);
 
-        $customerClause = "";
+        $clauses = "";
         if($data->customer != null && $data->customer != ''){
-            $customerClause = " and sm.SalseCustomer_IDNo = '$data->customer'";
+            $clauses .= " and sm.SalseCustomer_IDNo = '$data->customer'";
         }
-
-        $dateClause = "";
         if(($data->dateFrom != null && $data->dateFrom != '') && ($data->dateTo != null && $data->dateTo != '')){
-            $dateClause = " and sm.SaleMaster_SaleDate between '$data->dateFrom' and '$data->dateTo'";
+            $clauses .= " and sm.SaleMaster_SaleDate between '$data->dateFrom' and '$data->dateTo'";
         }
 
 
@@ -1803,25 +1801,38 @@ class Sales extends CI_Controller {
             join tbl_customer c on c.Customer_SlNo = sm.SalseCustomer_IDNo
             where sm.SaleMaster_branchid = ? 
             and sm.Status = 'a'
-            $customerClause $dateClause
+            $clauses
         ", $this->session->userdata('BRANCHid'))->result();
 
-        foreach($sales as $sale){
+        // foreach($sales as $sale){
+        //     $sale->saleDetails = $this->db->query("
+        //         select
+        //             sd.*,
+        //             p.Product_Code,
+        //             p.Product_Name,
+        //             ((sd.Purchase_Rate * 1)-((sd.Purchase_Rate *1)*(sd.Discount_amount/100))) as Purchase_Rate,
+        //               ((sd.Purchase_Rate * sd.SaleDetails_TotalQuantity)-((sd.Purchase_Rate * sd.SaleDetails_TotalQuantity)*(sd.Discount_amount/100))) as purchased_amount,
+        //               ((sd.Purchase_Rate * sd.SaleDetails_TotalQuantity)*(sd.Discount_amount/100)) as discount,
+        //             (select sd.SaleDetails_TotalAmount - purchased_amount) as profit_loss
+        //         from tbl_saledetails sd 
+        //         join tbl_product p on p.Product_SlNo = sd.Product_IDNo
+        //         where sd.SaleMaster_IDNo = ?
+        //     ", $sale->SaleMaster_SlNo)->result();
+        // }
+
+        foreach ($sales as $sale) {
             $sale->saleDetails = $this->db->query("
                 select
                     sd.*,
                     p.Product_Code,
                     p.Product_Name,
-                    ((sd.Purchase_Rate * 1)-((sd.Purchase_Rate *1)*(sd.Discount_amount/100))) as Purchase_Rate,
-                      ((sd.Purchase_Rate * sd.SaleDetails_TotalQuantity)-((sd.Purchase_Rate * sd.SaleDetails_TotalQuantity)*(sd.Discount_amount/100))) as purchased_amount,
-                      ((sd.Purchase_Rate * sd.SaleDetails_TotalQuantity)*(sd.Discount_amount/100)) as discount,
+                    (sd.Purchase_Rate * sd.SaleDetails_TotalQuantity) as purchased_amount,
                     (select sd.SaleDetails_TotalAmount - purchased_amount) as profit_loss
                 from tbl_saledetails sd 
                 join tbl_product p on p.Product_SlNo = sd.Product_IDNo
                 where sd.SaleMaster_IDNo = ?
             ", $sale->SaleMaster_SlNo)->result();
         }
-
         echo json_encode($sales);
     }
 

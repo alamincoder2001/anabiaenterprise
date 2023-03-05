@@ -403,11 +403,12 @@ class Products extends CI_Controller
                     p.Product_Name,
                     p.Product_Code,
                     p.Product_ReOrederLevel,
+                    p.is_imei,
                     (select (p.Product_Purchase_Rate * current_quantity)) as stock_value,
                     pc.ProductCategory_Name,
                     b.brand_name,
                     u.Unit_Name,
-                    (select sum(purchase_total) as purchase_total from  tbl_product_serial_numbers where ps_prod_id=p.Product_SlNo AND ps_p_r_status<>'yes' AND ps_brunch_id='" . $BRANCHid . "'  AND   (ps_s_status IS NULL OR ps_s_status<>'yes'   OR ps_s_r_status='yes') ) as purchase_total_am,
+                    (select sum(purchase_total) as purchase_total from  tbl_product_serial_numbers where ps_prod_id=p.Product_SlNo AND ps_p_r_status<>'yes' AND ps_brunch_id='" . $BRANCHid . "' AND (ps_s_status IS NULL OR ps_s_status<>'yes' OR ps_s_r_status='yes') ) as purchase_total_am,
                     (select sum(PurchaseDetails_TotalAmount) from tbl_purchasedetails  where Product_IDNo=p.Product_SlNo) as stockValue
 
                 from tbl_currentinventory ci
@@ -426,7 +427,7 @@ class Products extends CI_Controller
         $res['stock'] = $stock;
         $res['totalValue'] = array_sum(
             array_map(function ($product) {
-                return $product->purchase_total_am;
+                return $product->is_imei != 'false' ? $product->purchase_total_am : $product->stock_value;
             }, $stock)
         );
         $res['current_quantity'] = array_sum(
@@ -516,7 +517,7 @@ class Products extends CI_Controller
         $res['stock'] = $stock;
         $res['totalValue'] = array_sum(
             array_map(function ($product) {
-                return $product->purchase_total_am;
+                return $product->is_imei != 'false' ? $product->purchase_total_am : $product->stock_value;
             }, $stock)
         );
         $res['current_quantity'] = array_sum(

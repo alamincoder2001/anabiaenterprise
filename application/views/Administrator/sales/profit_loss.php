@@ -87,7 +87,6 @@
 							<th>Product</th>
 							<th>Sold Quantity</th>
 							<th>Purchase Rate</th>
-							<th>Purchase Discount</th>
 							<th>Purchased Total</th>
 							<th>Sold Amount</th>
 							<th>Profit/Loss</th>
@@ -95,7 +94,7 @@
 					</thead>
 					<tbody v-for="data in reportData" style="display:none;" v-bind:style="{display: reportData.length > 0 ? '' : 'none'}">
 						<tr>
-							<td colspan="8" style="background-color: #e3eae7;">
+							<td colspan="7" style="background-color: #e3eae7;">
 								<strong>Invoice: </strong> {{ data.SaleMaster_InvoiceNo }} | 
 								<strong>Sales Date: </strong> {{ data.SaleMaster_SaleDate }} | 
 								<strong>Customer: </strong> {{ data.Customer_Name }} |
@@ -109,13 +108,12 @@
 							<td>{{ product.Product_Name }}</td>
 							<td style="text-align:right;">{{ product.SaleDetails_TotalQuantity }}</td>
 							<td style="text-align:right;">{{ parseFloat(product.Purchase_Rate).toFixed(2) }}</td>
-							<td style="text-align:right;">{{  parseFloat(product.discount).toFixed(2) }}</td>
 							<td style="text-align:right;">{{  parseFloat(product.purchased_amount).toFixed(2) }}</td>
 							<td style="text-align:right;">{{  parseFloat(product.SaleDetails_TotalAmount).toFixed(2) }}</td>
 							<td style="text-align:right;">{{ parseFloat(product.profit_loss).toFixed(2) }}</td>
 						</tr>
 						<tr style="background-color: #f0f0f0;font-weight: bold;">
-							<td colspan="5" style="text-align:right;">Total</td>
+							<td colspan="4" style="text-align:right;">Total</td>
 							<td style="text-align:right;">{{ data.saleDetails.reduce((prev, cur) => { return prev + parseFloat(cur.purchased_amount) }, 0) }}</td>
 							<td style="text-align:right;">{{ data.saleDetails.reduce((prev, cur) => { return prev + parseFloat(cur.SaleDetails_TotalAmount) }, 0) }}</td>
 							<td style="text-align:right;">{{ data.saleDetails.reduce((prev, cur) => { return prev + parseFloat(cur.profit_loss) }, 0) }}</td>
@@ -123,7 +121,7 @@
 					</tbody>
 					<tfoot style="display:none;font-weight:bold;background-color:#e9dcdc;" v-bind:style="{display: reportData.length > 0 ? '' : 'none'}">
 						<tr>
-							<td style="text-align:right;" colspan="5">Total Profit</td>
+							<td style="text-align:right;" colspan="4">Total Profit</td>
 							<td style="text-align:right;">
 								{{ 
 									reportData.reduce((prev, cur) => { return prev + parseFloat(
@@ -148,37 +146,37 @@
 						</tr>
 
 						<tr>
-							<td colspan="4" style="text-align:right;">Other Income (+)</td>
+							<td colspan="3" style="text-align:right;">Other Income (+)</td>
 							<td colspan="3"></td>
 							<td style="text-align:right;">{{ otherIncomeExpense.income | decimal }}</td>
 						</tr>
 
 						<tr>
-							<td colspan="4" style="text-align:right;">Total Discount (-)</td>
+							<td colspan="3" style="text-align:right;">Total Discount (-)</td>
 							<td colspan="3"></td>
 							<td style="text-align:right;">{{ totalDiscount = reportData.reduce((prev, cur) => { return prev + parseFloat(cur.SaleMaster_TotalDiscountAmount) }, 0).toFixed(2) }}</td>
 						</tr>
 
 						<tr>
-							<td colspan="4" style="text-align:right;">Total Damaged (-)</td>
+							<td colspan="3" style="text-align:right;">Total Damaged (-)</td>
 							<td colspan="3"></td>
 							<td style="text-align:right;">{{ otherIncomeExpense.damaged_amount | decimal }}</td>
 						</tr>
 
 						<tr>
-							<td colspan="4" style="text-align:right;">Cash Transaction (-)</td>
+							<td colspan="3" style="text-align:right;">Cash Transaction (-)</td>
 							<td colspan="3"></td>
 							<td style="text-align:right;">{{ otherIncomeExpense.expense | decimal }}</td>
 						</tr>
 
 						<tr>
-							<td colspan="4" style="text-align:right;">Employee Payment (-)</td>
+							<td colspan="3" style="text-align:right;">Employee Payment (-)</td>
 							<td colspan="3"></td>
 							<td style="text-align:right;">{{ otherIncomeExpense.employee_payment | decimal }}</td>
 						</tr>
 
 						<tr>
-							<td colspan="4" style="text-align:right;">Profit</td>
+							<td colspan="3" style="text-align:right;">Profit</td>
 							<td colspan="3"></td>
 							<td style="text-align:right;">
 								{{  ((parseFloat(totalProfit) + parseFloat(otherIncomeExpense.income)) - 
