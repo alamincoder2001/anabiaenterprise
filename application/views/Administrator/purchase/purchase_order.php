@@ -401,7 +401,7 @@ margin-right: 6px;">
 						<td colspan="3">Sub Total</td>
 					</tr>
 					<tr>
-						<td colspan="4"><textarea style="width: 100%;font-size:13px;" placeholder="Note" v-model="purchase.note"></textarea></td>
+						<td colspan="6"><textarea style="width: 100%;font-size:13px;" placeholder="Note" v-model="purchase.note"></textarea></td>
 						<td colspan="3" style="padding-top: 15px;font-size:18px;">{{ purchase.subTotal }}</td>
 					</tr>
 				</tbody>
@@ -642,7 +642,6 @@ margin-right: 6px;">
 						get_imei_number: this.get_imei_number
 					}).then(res => {
 						if (res.data > 0) {
-
 							alert("Already Product Purchased !!");
 							return false;
 
@@ -740,7 +739,6 @@ margin-right: 6px;">
 				this.calculateTotal();
 			},
 			onChangeProduct() {
-
 				// this.selectedProduct.discount = 0
 				// this.$refs.quantity.focus();
 				if (this.selectedProduct.Product_Name != "") {
@@ -836,9 +834,6 @@ margin-right: 6px;">
 						}
 					});
 				} else {
-
-
-
 					this.cart.splice(ind, 1);
 
 					var newImeiCartStore = this.IMEICartStore.filter((el) => {
@@ -983,8 +978,6 @@ margin-right: 6px;">
 
 
 						product.imei.forEach((obj) => {
-
-
 							let imei_cart_obj = {
 								productId: obj.ps_prod_id,
 								name: product.Product_Name,
@@ -1000,9 +993,6 @@ margin-right: 6px;">
 							cartProduct.IMEICartStore.push(imei_cart_obj);
 						})
 						this.cart.push(cartProduct);
-
-
-						console.log(this.cart)
 					})
 				})
 			}

@@ -22,19 +22,20 @@ class Purchase extends CI_Controller
         redirect("Administrator/Purchase/order");
     }
 
-    public function getPurchases(){
+    public function getPurchases()
+    {
         $data = json_decode($this->input->raw_input_stream);
         $branchId = $this->session->userdata('BRANCHid');
 
         $dateClause = "";
-        if(isset($data->dateFrom) && $data->dateFrom != '' && isset($data->dateTo) && $data->dateTo != ''){
+        if (isset($data->dateFrom) && $data->dateFrom != '' && isset($data->dateTo) && $data->dateTo != '') {
             $dateClause = " and pm.PurchaseMaster_OrderDate between '$data->dateFrom' and '$data->dateTo'";
         }
 
         $purchaseIdClause = "";
-        if(isset($data->purchaseId) && $data->purchaseId != null){
+        if (isset($data->purchaseId) && $data->purchaseId != null) {
             $purchaseIdClause = " and pm.PurchaseMaster_SlNo = '$data->purchaseId'";
-         
+
             $res['purchaseDetails']   = $this->db->query("
                 select
                     pd.*,
@@ -68,21 +69,22 @@ class Purchase extends CI_Controller
             $purchaseIdClause $dateClause
             order by pm.PurchaseMaster_SlNo desc
         ")->result();
-        
-        
-        
-        if(isset($data->purchaseId) && $data->purchaseId != null){
-            $res['purchaseDetails'] = array_map(function($purchase){
-                $purchase->imei = $this->db->query("SELECT * FROM tbl_product_serial_numbers WHERE purchase_details_id =?  ",$purchase->PurchaseDetails_SlNo)->result();
+
+
+
+        if (isset($data->purchaseId) && $data->purchaseId != null) {
+            $res['purchaseDetails'] = array_map(function ($purchase) {
+                $purchase->imei = $this->db->query("SELECT * FROM tbl_product_serial_numbers WHERE purchase_details_id =?  ", $purchase->PurchaseDetails_SlNo)->result();
                 return $purchase;
             },  $res['purchaseDetails']);
         }
-        
+
         $res['purchases'] = $purchases;
         echo json_encode($res);
     }
 
-    public function getPurchaseDetailsForReturn(){
+    public function getPurchaseDetailsForReturn()
+    {
         $data = json_decode($this->input->raw_input_stream);
         $purchaseDetails = $this->db->query("
             select
@@ -105,9 +107,10 @@ class Purchase extends CI_Controller
         echo json_encode($purchaseDetails);
     }
 
-    public function addPurchaseReturn(){
-        $res = ['success'=>false, 'message'=>''];
-        try{
+    public function addPurchaseReturn()
+    {
+        $res = ['success' => false, 'message' => ''];
+        try {
             $data = json_decode($this->input->raw_input_stream);
             $purchaseReturn = array(
                 'PurchaseMaster_InvoiceNo' => $data->invoice->PurchaseMaster_InvoiceNo,
@@ -124,7 +127,7 @@ class Purchase extends CI_Controller
             $this->db->insert('tbl_purchasereturn', $purchaseReturn);
             $purchaseReturnId = $this->db->insert_id();
 
-            foreach($data->cart as $product){
+            foreach ($data->cart as $product) {
                 $returnDetails = array(
                     'PurchaseReturn_SlNo' => $purchaseReturnId,
                     'PurchaseReturnDetailsProduct_SlNo' => $product->Product_IDNo,
@@ -145,27 +148,28 @@ class Purchase extends CI_Controller
                     and branch_id = ?
                 ", [$product->return_quantity, $product->Product_IDNo, $this->session->userdata('BRANCHid')]);
             }
-            $res = ['success'=>true, 'message'=>'Purchase return success'];
-        } catch (Exception $ex){
-            $res = ['success'=>false, 'message'=>$ex->getMessage()];
+            $res = ['success' => true, 'message' => 'Purchase return success'];
+        } catch (Exception $ex) {
+            $res = ['success' => false, 'message' => $ex->getMessage()];
         }
 
         echo json_encode($res);
     }
 
-    public function getPurchaseReturnDetails(){
+    public function getPurchaseReturnDetails()
+    {
         $data = json_decode($this->input->raw_input_stream);
 
         $clauses = "";
-        if(isset($data->dateFrom) && $data->dateFrom != '' && isset($data->dateTo) && $data->dateTo != ''){
+        if (isset($data->dateFrom) && $data->dateFrom != '' && isset($data->dateTo) && $data->dateTo != '') {
             $clauses .= " and pr.PurchaseReturn_ReturnDate between '$data->dateFrom' and '$data->dateTo'";
         }
 
-        if(isset($data->supplierId) && $data->supplierId != ''){
+        if (isset($data->supplierId) && $data->supplierId != '') {
             $clauses .= " and pr.Supplier_IDdNo = '$data->supplierId'";
         }
 
-        if(isset($data->productId) && $data->productId != ''){
+        if (isset($data->productId) && $data->productId != '') {
             $clauses .= " and prd.PurchaseReturnDetailsProduct_SlNo = '$data->productId'";
         }
 
@@ -194,7 +198,7 @@ class Purchase extends CI_Controller
     public function order()
     {
         $access = $this->mt->userAccess();
-        if(!$access){
+        if (!$access) {
             redirect(base_url());
         }
         $data['title'] = "Purchase Order";
@@ -207,7 +211,8 @@ class Purchase extends CI_Controller
         $this->load->view('Administrator/index', $data);
     }
 
-    public function purchaseEdit($purchaseId){
+    public function purchaseEdit($purchaseId)
+    {
         $data['title'] = "Purchase Order";
         $data['purchaseId'] = $purchaseId;
         $data['invoice'] = $this->db->query("select PurchaseMaster_InvoiceNo from tbl_purchasemaster where PurchaseMaster_SlNo = ?", $purchaseId)->row()->PurchaseMaster_InvoiceNo;
@@ -241,7 +246,7 @@ class Purchase extends CI_Controller
     public function returns()
     {
         $access = $this->mt->userAccess();
-        if(!$access){
+        if (!$access) {
             redirect(base_url());
         }
         $data['title'] = "Purchase Return";
@@ -251,29 +256,30 @@ class Purchase extends CI_Controller
     public function returnsIemi()
     {
         $access = $this->mt->userAccess();
-        if(!$access){
+        if (!$access) {
             redirect(base_url());
         }
         $data['title'] = "Purchase Return";
         $data['content'] = $this->load->view('Administrator/purchase/purchase_imei_return', $data, TRUE);
         $this->load->view('Administrator/index', $data);
     }
-    
-    public function purchase_imei_return(){
+
+    public function purchase_imei_return()
+    {
         $data = json_decode($this->input->raw_input_stream);
-          
+
         $datas = array(
-            'ps_p_r_status'=>'yes',
-            'ps_p_r_amount'=>$data->return_amout
+            'ps_p_r_status' => 'yes',
+            'ps_p_r_amount' => $data->return_amout
         );
         $this->db->where('ps_imei_number', $data->imei_number);
-         $this->db->update('tbl_product_serial_numbers', $datas);
+        $this->db->update('tbl_product_serial_numbers', $datas);
         $result = $this->db->query("
                     update tbl_currentinventory 
                     set purchase_return_quantity = purchase_return_quantity + ? 
                     where product_id = ?
                     and branch_id = ?
-                ", [1, $data->prod_id,$this->session->userdata('BRANCHid')]);
+                ", [1, $data->prod_id, $this->session->userdata('BRANCHid')]);
 
         if ($result) {
             echo 'return';
@@ -285,7 +291,7 @@ class Purchase extends CI_Controller
     public function damage_entry()
     {
         $access = $this->mt->userAccess();
-        if(!$access){
+        if (!$access) {
             redirect(base_url());
         }
         $data['title'] = "Damage Entry";
@@ -303,8 +309,8 @@ class Purchase extends CI_Controller
 
     function Selectsuplier()
     {
-    
-        
+
+
         $sid = $this->input->post('sid');
         $query = $this->db->query("SELECT * FROM tbl_supplier where Supplier_SlNo = '$sid'");
         $data['Supplier'] = $query->row();
@@ -329,13 +335,14 @@ class Purchase extends CI_Controller
         $this->load->view('Administrator/purchase/ajax_product', $data);
     }
 
-    function get_return_imei_number(){
+    function get_return_imei_number()
+    {
         $imei_number = $this->input->post('imei_number');
         $get_ps_detail = $this->db->query("SELECT * FROM tbl_product_serial_numbers WHERE ps_imei_number='$imei_number'")->result_array();
         $ps_prod_id = $get_ps_detail[0]['ps_prod_id'];
         $ps_purchase_inv = $get_ps_detail[0]['ps_purchase_inv'];
         $get_m_detail =  $this->db->query("SELECT * FROM tbl_purchasemaster WHERE  PurchaseMaster_InvoiceNo='$ps_purchase_inv'")->result_array();
-        
+
         $PurchaseMaster_IDNo = $get_m_detail[0]['PurchaseMaster_SlNo'];
         $imei_detail = $this->db->query("select ps.*,pd.PurchaseDetails_Rate,p.Product_Name,p.Product_SlNo
         FROM tbl_product_serial_numbers as ps 
@@ -344,7 +351,7 @@ class Purchase extends CI_Controller
         INNER JOIN tbl_product as p 
         ON p.Product_SlNo ='$ps_prod_id'
         WHERE  ps.ps_imei_number ='$imei_number'")->result();
-        
+
         $html = '<table class="table table-bordered">
                  <tr height="30">
                 <th>IMEI Number</th>
@@ -353,18 +360,16 @@ class Purchase extends CI_Controller
                  <th>Return Amount</th>
                  <th>Action</th>
                  ';
-        foreach($imei_detail as $key=>$value){
+        foreach ($imei_detail as $key => $value) {
 
-            $html .='</tr>
+            $html .= '</tr>
                      <tr>
-                     <td style="text-align: center;">'.$value->ps_imei_number.'</td>
-                     <td style="text-align: center;">'.$value->Product_Name.'</td>
-                     <td style="text-align: center;">'.$value->PurchaseDetails_Rate.'</td>
-                     <td style="text-align: center;">'.$value->PurchaseDetails_Rate.'</td>
-                     <td style="display: flex;align-content: center;justify-content: center;"><button style="width: 118px;padding: 7px;margin: 2px;border: navajowhite;" class="btn btn-success btn-sm" id="parchase_return_btn" data-prod_id="'.$value->Product_SlNo.'" data-id="'.$value->ps_imei_number.'" data-amount="'.$value->PurchaseDetails_Rate.'">Purchase Return</button></td>
+                     <td style="text-align: center;">' . $value->ps_imei_number . '</td>
+                     <td style="text-align: center;">' . $value->Product_Name . '</td>
+                     <td style="text-align: center;">' . $value->PurchaseDetails_Rate . '</td>
+                     <td style="text-align: center;">' . $value->PurchaseDetails_Rate . '</td>
+                     <td style="display: flex;align-content: center;justify-content: center;"><button style="width: 118px;padding: 7px;margin: 2px;border: navajowhite;" class="btn btn-success btn-sm" id="parchase_return_btn" data-prod_id="' . $value->Product_SlNo . '" data-id="' . $value->ps_imei_number . '" data-amount="' . $value->PurchaseDetails_Rate . '">Purchase Return</button></td>
                  </tr>';
-
-                 
         }
         $html .= '</table>';
         echo $html;
@@ -377,29 +382,28 @@ class Purchase extends CI_Controller
     }
 
 
-    function delete_imeis(){ 
+    function delete_imeis()
+    {
         $data = json_decode($this->input->raw_input_stream);
-        foreach($data->product as $key=>$value){
+        foreach ($data->product as $key => $value) {
 
             $this->db->query("delete from tbl_product_serial_numbers where ps_imei_number = ?", $value->imeiNumber);
-
         }
-
     }
     public function addPurchase()
     {
-        $res = ['success'=>false, 'message'=>''];
-        try{
+        $res = ['success' => false, 'message' => ''];
+        try {
             $data = json_decode($this->input->raw_input_stream);
 
             $invoice = $data->purchase->invoice;
             $invoiceCount = $this->db->query("select * from tbl_purchasemaster where PurchaseMaster_InvoiceNo = ?", $invoice)->num_rows();
-            if($invoiceCount != 0){
+            if ($invoiceCount != 0) {
                 $invoice = $this->mt->generatePurchaseInvoice();
             }
 
             $supplierId = $data->purchase->supplierId;
-            if(isset($data->supplier)){
+            if (isset($data->supplier)) {
                 $supplier = (array)$data->supplier;
                 unset($supplier['Supplier_SlNo']);
                 unset($supplier['display_name']);
@@ -431,13 +435,13 @@ class Purchase extends CI_Controller
                 'AddBy' => $this->session->userdata("FullName"),
                 'AddTime' => date('Y-m-d H:i:s'),
                 'PurchaseMaster_BranchID' => $this->session->userdata('BRANCHid'),
-                'reference'=>$data->purchase->reference
+                'reference' => $data->purchase->reference
             );
 
             $this->db->insert('tbl_purchasemaster', $purchase);
             $purchaseId = $this->db->insert_id();
-            $i =0;
-            foreach($data->cartProducts as $product){
+            $i = 0;
+            foreach ($data->cartProducts as $product) {
                 $i++;
                 $purchaseDetails = array(
                     'PurchaseMaster_IDNo' => $purchaseId,
@@ -458,31 +462,31 @@ class Purchase extends CI_Controller
 
                 foreach ($product->IMEICartStore as $imeikey => $imeivalue) {
 
-               $rate = $imeivalue->purchaseRate;
-               $dis_per = $imeivalue->discount/100;
-               $total_dis = $rate-($rate * $dis_per);
+                    $rate = $imeivalue->purchaseRate;
+                    $dis_per = $imeivalue->discount / 100;
+                    $total_dis = $rate - ($rate * $dis_per);
 
-               $data = array(
-                'ps_prod_id'=>$imeivalue->productId,
-                'ps_imei_number'=>$imeivalue->imeiNumber,
-                'ps_purchase_inv'=> $invoice,
-                'ps_purchase_supp_id'=> $supplierId,
-                'ps_p_status'=> 'yes',
-                'ps_brunch_id'=> $this->session->userdata('BRANCHid'),
-                'ps_status'=> 'a',
-                'purchase_details_id'=>$purchase_d_id,
-                'purchase_rate'=>$imeivalue->purchaseRate,
-                'purchase_discount'=>$imeivalue->discount,
-                'purchase_total'=>$total_dis,
-                'purchase_date'=>date('Y-m-d')
-            );
-            $this->db->insert("tbl_product_serial_numbers",$data);
+                    $data = array(
+                        'ps_prod_id' => $imeivalue->productId,
+                        'ps_imei_number' => $imeivalue->imeiNumber,
+                        'ps_purchase_inv' => $invoice,
+                        'ps_purchase_supp_id' => $supplierId,
+                        'ps_p_status' => 'yes',
+                        'ps_brunch_id' => $this->session->userdata('BRANCHid'),
+                        'ps_status' => 'a',
+                        'purchase_details_id' => $purchase_d_id,
+                        'purchase_rate' => $imeivalue->purchaseRate,
+                        'purchase_discount' => $imeivalue->discount,
+                        'purchase_total' => $total_dis,
+                        'purchase_date' => date('Y-m-d')
+                    );
+                    $this->db->insert("tbl_product_serial_numbers", $data);
                 }
-               
+
 
 
                 $inventoryCount = $this->db->query("select * from tbl_currentinventory where product_id = ? and branch_id = ?", [$product->productId, $this->session->userdata('BRANCHid')])->num_rows();
-                if($inventoryCount == 0){
+                if ($inventoryCount == 0) {
                     $inventory = array(
                         'product_id' => $product->productId,
                         'purchase_quantity' => $product->quantity,
@@ -502,32 +506,26 @@ class Purchase extends CI_Controller
 
                 /// 
 
-              
+
             }
 
-          
-               
-            
-          
-           
-            
-            
-        $res=['success'=>true, 'message'=>'Purchase Success', 'purchaseId'=>$purchaseId];
-        } catch (Exception $ex){
-            $res = ['success'=>false, 'message'=>$ex->getMessage()];
+
+            $res = ['success' => true, 'message' => 'Purchase Success', 'purchaseId' => $purchaseId];
+        } catch (Exception $ex) {
+            $res = ['success' => false, 'message' => $ex->getMessage()];
         }
 
         echo json_encode($res);
     }
-    
+
     public function updatePurchase()
     {
-        $res = ['success'=>false, 'message'=>''];
-        try{
+        $res = ['success' => false, 'message' => ''];
+        try {
             $data = json_decode($this->input->raw_input_stream);
             $purchaseId = $data->purchase->purchaseId;
 
-            if(isset($data->supplier)){
+            if (isset($data->supplier)) {
                 $supplier = (array)$data->supplier;
                 unset($supplier['Supplier_SlNo']);
                 unset($supplier['display_name']);
@@ -555,15 +553,15 @@ class Purchase extends CI_Controller
                 'UpdateBy' => $this->session->userdata("FullName"),
                 'UpdateTime' => date('Y-m-d H:i:s'),
                 'PurchaseMaster_BranchID' => $this->session->userdata('BRANCHid'),
-                'reference'=>$data->purchase->reference
-            );            
+                'reference' => $data->purchase->reference
+            );
             $this->db->where('PurchaseMaster_SlNo', $purchaseId);
             $this->db->update('tbl_purchasemaster', $purchase);
 
             $oldPurchaseDetails = $this->db->query("select * from tbl_purchasedetails where PurchaseMaster_IDNo = ?", $purchaseId)->result();
             $this->db->query("delete from tbl_purchasedetails where PurchaseMaster_IDNo = ?", $purchaseId);
 
-            foreach($oldPurchaseDetails as $product){
+            foreach ($oldPurchaseDetails as $product) {
                 $this->db->query("
                     update tbl_currentinventory 
                     set purchase_quantity = purchase_quantity - ? 
@@ -576,7 +574,7 @@ class Purchase extends CI_Controller
             //  $this->db->query("delete from tbl_product_serial_numbers where ps_purchase_inv = ?", $purchase_inv);
 
 
-            foreach($data->cartProducts as $product){
+            foreach ($data->cartProducts as $product) {
 
                 $purchaseDetails = array(
                     'PurchaseMaster_IDNo' => $purchaseId,
@@ -593,36 +591,35 @@ class Purchase extends CI_Controller
                 $this->db->insert('tbl_purchasedetails', $purchaseDetails);
                 $purchase_d_id = $this->db->insert_id();
 
-            foreach ($product->IMEICartStore as $imeikey => $imeivalue) {
-            $checkAvaImei = $this->db->query('select * from tbl_product_serial_numbers where 
-            ps_purchase_inv=? and ps_imei_number=? and ps_prod_id=?',[$purchase_inv,$imeivalue->imeiNumber,$imeivalue->productId])->num_rows();
-            if($checkAvaImei < 1){
-                $rate = $imeivalue->purchaseRate;
-                $dis_per = $imeivalue->discount/100;
-                $total_dis = $rate-($rate * $dis_per);
-                $data = array(
-                 'ps_prod_id'=>$imeivalue->productId,
-                 'ps_imei_number'=>$imeivalue->imeiNumber,
-                 'ps_purchase_inv'=> $purchase_inv,
-                 'ps_p_status'=> 'yes',
-                 'ps_brunch_id'=> $this->session->userdata('BRANCHid'),
-                 'ps_status'=> 'a',
-                 'purchase_details_id'=>$purchase_d_id,
-                 'purchase_rate'=>$imeivalue->purchaseRate,
-                 'purchase_discount'=>$imeivalue->discount,
-                 'purchase_total'=>$total_dis,
-                 'purchase_date'=>date('Y-m-d')
-                );
-             $this->db->insert("tbl_product_serial_numbers",$data);
-            }else{
-                $this->db->query('update tbl_product_serial_numbers SET  purchase_details_id=? WHERE ps_purchase_inv=? and ps_imei_number=? and ps_prod_id=? ',[$purchase_d_id,$purchase_inv,$imeivalue->imeiNumber,$imeivalue->productId]);
-            }
-        
-            }
+                foreach ($product->IMEICartStore as $imeikey => $imeivalue) {
+                    $checkAvaImei = $this->db->query('select * from tbl_product_serial_numbers where 
+            ps_purchase_inv=? and ps_imei_number=? and ps_prod_id=?', [$purchase_inv, $imeivalue->imeiNumber, $imeivalue->productId])->num_rows();
+                    if ($checkAvaImei < 1) {
+                        $rate = $imeivalue->purchaseRate;
+                        $dis_per = $imeivalue->discount / 100;
+                        $total_dis = $rate - ($rate * $dis_per);
+                        $data = array(
+                            'ps_prod_id' => $imeivalue->productId,
+                            'ps_imei_number' => $imeivalue->imeiNumber,
+                            'ps_purchase_inv' => $purchase_inv,
+                            'ps_p_status' => 'yes',
+                            'ps_brunch_id' => $this->session->userdata('BRANCHid'),
+                            'ps_status' => 'a',
+                            'purchase_details_id' => $purchase_d_id,
+                            'purchase_rate' => $imeivalue->purchaseRate,
+                            'purchase_discount' => $imeivalue->discount,
+                            'purchase_total' => $total_dis,
+                            'purchase_date' => date('Y-m-d')
+                        );
+                        $this->db->insert("tbl_product_serial_numbers", $data);
+                    } else {
+                        $this->db->query('update tbl_product_serial_numbers SET  purchase_details_id=? WHERE ps_purchase_inv=? and ps_imei_number=? and ps_prod_id=? ', [$purchase_d_id, $purchase_inv, $imeivalue->imeiNumber, $imeivalue->productId]);
+                    }
+                }
 
 
                 $inventoryCount = $this->db->query("select * from tbl_currentinventory where product_id = ? and branch_id = ?", [$product->productId, $this->session->userdata('BRANCHid')])->num_rows();
-                if($inventoryCount == 0){
+                if ($inventoryCount == 0) {
                     $inventory = array(
                         'product_id' => $product->productId,
                         'purchase_quantity' => $product->quantity,
@@ -639,25 +636,26 @@ class Purchase extends CI_Controller
                 }
             }
 
-            
 
-               
 
-            
-            $res=['success'=>true, 'message'=>'Purchase Success', 'purchaseId'=>$purchaseId];
-        } catch (Exception $ex){
-            $res = ['success'=>false, 'message'=>$ex->getMessage()];
+
+
+
+            $res = ['success' => true, 'message' => 'Purchase Success', 'purchaseId' => $purchaseId];
+        } catch (Exception $ex) {
+            $res = ['success' => false, 'message' => $ex->getMessage()];
         }
 
         echo json_encode($res);
     }
 
-    function check_soldIMEI(){
+    function check_soldIMEI()
+    {
         $data = json_decode($this->input->raw_input_stream);
-        $ava = $this->db->query("SELECT * FROM tbl_product_serial_numbers WHERE ps_purchase_inv=? and ps_prod_id=? and ps_s_status='yes' AND  ps_s_r_status='no' AND ps_p_r_status='no' ",[$data->invoice,$data->prodId])->num_rows();
-        if($ava>0){
+        $ava = $this->db->query("SELECT * FROM tbl_product_serial_numbers WHERE ps_purchase_inv=? and ps_prod_id=? and ps_s_status='yes' AND  ps_s_r_status='no' AND ps_p_r_status='no' ", [$data->invoice, $data->prodId])->num_rows();
+        if ($ava > 0) {
             echo json_encode('yes');
-        }else{
+        } else {
             echo json_encode('no');
         }
     }
@@ -699,7 +697,6 @@ class Purchase extends CI_Controller
             $damageQty = $roxx['PurchaseInventory_DamageQuantity'];
             $curentstock = $curentstock - $returnQty;
             echo $curentstock = $curentstock - $damageQty;
-
         }
     }
 
@@ -766,7 +763,7 @@ class Purchase extends CI_Controller
                         $returns = array(
                             "PurchaseReturn_SlNo" => $iid,
                             "PurchaseReturnDetails_ReturnDate" => $this->input->post('return_date'),
-                            "PurchaseReturnDetailsProduct_SlNo" => $ron->Product_SlNo,//$productIDs[$i]
+                            "PurchaseReturnDetailsProduct_SlNo" => $ron->Product_SlNo, //$productIDs[$i]
                             "PurchaseReturnDetails_ReturnQuantity" => $returnqtyss[$i] * $romio->cteate_qty,
                             "PurchaseReturnDetails_pacQty" => $returnqtyss[$i],
                             "PurchaseReturnDetails_ReturnAmount" => $returnamounts[$i],
@@ -776,10 +773,9 @@ class Purchase extends CI_Controller
                             "AddTime" => date("Y-m-d H:i:s")
                         );
                         $this->Billing_model->SalesReturn('tbl_purchasereturndetails', $returns);
-
                     }
                 } else {
-                    if ($returnqtyss[$i] != 0 AND $returnamounts[$i] != 0) {
+                    if ($returnqtyss[$i] != 0 and $returnamounts[$i] != 0) {
                         $returns = array(
                             "PurchaseReturn_SlNo" => $iid,
                             "PurchaseReturnDetails_ReturnDate" => $this->input->post('return_date'),
@@ -828,11 +824,11 @@ class Purchase extends CI_Controller
                         $sqn = $this->db->query("SELECT * FROM tbl_product WHERE Product_Code = '" . $romio->create_proCode . "'");
                         $ron = $sqn->row();
                         //cteate_qty
-                        if ($returnqtyss[$i] != 0 AND $returnamounts[$i] != 0) {
+                        if ($returnqtyss[$i] != 0 and $returnamounts[$i] != 0) {
                             $returns = array(
                                 "PurchaseReturn_SlNo" => $return_id,
                                 "PurchaseReturnDetails_ReturnDate" => $this->input->post('return_date'),
-                                "PurchaseReturnDetailsProduct_SlNo" => $ron->Product_SlNo,//$productIDs[$i]
+                                "PurchaseReturnDetailsProduct_SlNo" => $ron->Product_SlNo, //$productIDs[$i]
                                 "PurchaseReturnDetails_ReturnQuantity" => $returnqtyss[$i] * $romio->cteate_qty,
                                 "PurchaseReturnDetails_pacQty" => $returnqtyss[$i],
                                 "PurchaseReturnDetails_ReturnAmount" => $returnamounts[$i],
@@ -845,7 +841,7 @@ class Purchase extends CI_Controller
                         }
                     }
                 } else {
-                    if ($returnqtyss[$i] != 0 AND $returnamounts[$i] != 0) {
+                    if ($returnqtyss[$i] != 0 and $returnamounts[$i] != 0) {
                         $returns = array(
                             "PurchaseReturn_SlNo" => $return_id,
                             "PurchaseReturnDetails_ReturnDate" => $this->input->post('return_date'),
@@ -903,7 +899,6 @@ class Purchase extends CI_Controller
                         "PurchaseInventory_returnqty" => $rqtyss[$f] + $pacKqty
                     );
                     $this->mt->update_data('tbl_purchaseinventory', $returns, $id, $fld);
-
                 }
             } else {
                 $store = $this->session->userdata('store');
@@ -919,7 +914,6 @@ class Purchase extends CI_Controller
                 );
                 $this->mt->update_data('tbl_purchaseinventory', $returns, $id, $fld);
             }
-
         }
         $this->load->view('Administrator/sales/blankpage');
     }
@@ -927,7 +921,7 @@ class Purchase extends CI_Controller
     public function purchase_bill()
     {
         $access = $this->mt->userAccess();
-        if(!$access){
+        if (!$access) {
             redirect(base_url());
         }
         $data['title'] = "Purchase Invoice";
@@ -939,7 +933,7 @@ class Purchase extends CI_Controller
     {
         $id = $this->input->post('purchasemsid');
         $data['PurchID'] = $id;
-        $this->session->set_userdata('PurchID',$id);
+        $this->session->set_userdata('PurchID', $id);
         $data['purchase'] = $this->Purchase_model->single_purchase_master_info($id);
         $data['products'] = $this->Purchase_model->invoice_wise_purchase_products($id);
         $this->load->view('Administrator/purchase/purchase_invoice_search', $data);
@@ -948,7 +942,7 @@ class Purchase extends CI_Controller
     public function purchase_record()
     {
         $access = $this->mt->userAccess();
-        if(!$access){
+        if (!$access) {
             redirect(base_url());
         }
         $data['title'] = "Purchase Record";
@@ -956,14 +950,15 @@ class Purchase extends CI_Controller
         $this->load->view('Administrator/index', $data);
     }
 
-    public function getPurchaseRecord(){
+    public function getPurchaseRecord()
+    {
         $data = json_decode($this->input->raw_input_stream);
         $branchId = $this->session->userdata("BRANCHid");
         $clauses = "";
-        if(isset($data->dateFrom) && $data->dateFrom != '' && isset($data->dateTo) && $data->dateTo != ''){
+        if (isset($data->dateFrom) && $data->dateFrom != '' && isset($data->dateTo) && $data->dateTo != '') {
             $clauses .= " and pm.PurchaseMaster_OrderDate between '$data->dateFrom' and '$data->dateTo'";
         }
-        if(isset($data->userFullName) && $data->userFullName != ''){
+        if (isset($data->userFullName) && $data->userFullName != '') {
             $clauses .= " and pm.AddBy = '$data->userFullName'";
         }
 
@@ -983,7 +978,7 @@ class Purchase extends CI_Controller
             $clauses
         ")->result();
 
-        foreach($purchases as $purchase){
+        foreach ($purchases as $purchase) {
             $purchase->purchaseDetails = $this->db->query("
                 select 
                     pd.*,
@@ -1000,23 +995,24 @@ class Purchase extends CI_Controller
         echo json_encode($purchases);
     }
 
-    public function getPurchaseDetails(){
+    public function getPurchaseDetails()
+    {
         $data = json_decode($this->input->raw_input_stream);
 
         $clauses = "";
-        if(isset($data->supplierId) && $data->supplierId != ''){
+        if (isset($data->supplierId) && $data->supplierId != '') {
             $clauses .= " and s.Supplier_SlNo = '$data->supplierId'";
         }
 
-        if(isset($data->productId) && $data->productId != ''){
+        if (isset($data->productId) && $data->productId != '') {
             $clauses .= " and p.Product_SlNo = '$data->productId'";
         }
 
-        if(isset($data->categoryId) && $data->categoryId != ''){
+        if (isset($data->categoryId) && $data->categoryId != '') {
             $clauses .= " and pc.ProductCategory_SlNo = '$data->categoryId'";
         }
 
-        if(isset($data->dateFrom) && $data->dateFrom != '' && isset($data->dateTo) && $data->dateTo != ''){
+        if (isset($data->dateFrom) && $data->dateFrom != '' && isset($data->dateTo) && $data->dateTo != '') {
             $clauses .= " and pm.PurchaseMaster_OrderDate between '$data->dateFrom' and '$data->dateTo'";
         }
 
@@ -1043,43 +1039,43 @@ class Purchase extends CI_Controller
     }
 
     /*Delete Purchase Record*/
-    public function  deletePurchase(){
-        $res = ['success'=>false, 'message'=>''];
-        try{
+    public function  deletePurchase()
+    {
+        $res = ['success' => false, 'message' => ''];
+        try {
             $data = json_decode($this->input->raw_input_stream);
             $purchase = $this->db->select('*')->where('PurchaseMaster_SlNo', $data->purchaseId)->get('tbl_purchasemaster')->row();
-            if($purchase->status != 'a'){
-                $res = ['success'=>false, 'message'=>'Purchase not found'];
+            if ($purchase->status != 'a') {
+                $res = ['success' => false, 'message' => 'Purchase not found'];
                 echo json_encode($res);
                 exit;
             }
 
             /*Get Purchase Details Data*/
-            $purchaseDetails = $this->db->select('Product_IDNo,PurchaseDetails_TotalQuantity')->where('PurchaseMaster_IDNo',$data->purchaseId)->get('tbl_purchasedetails')->result();
+            $purchaseDetails = $this->db->select('Product_IDNo,PurchaseDetails_TotalQuantity')->where('PurchaseMaster_IDNo', $data->purchaseId)->get('tbl_purchasedetails')->result();
 
-            foreach ($purchaseDetails as $detail){
+            foreach ($purchaseDetails as $detail) {
                 /*Get Product Current Quantity*/
-                $totalQty = $this->db->where(['product_id'=>$detail->Product_IDNo, 'branch_id'=>$purchase->PurchaseMaster_BranchID])->get('tbl_currentinventory')->row()->purchase_quantity;
+                $totalQty = $this->db->where(['product_id' => $detail->Product_IDNo, 'branch_id' => $purchase->PurchaseMaster_BranchID])->get('tbl_currentinventory')->row()->purchase_quantity;
 
                 /* Subtract Product Quantity form  Current Quantity  */
                 $newQty = $totalQty - $detail->PurchaseDetails_TotalQuantity;
 
                 /*Update Purchase Inventory*/
-                $this->db->set('purchase_quantity',$newQty)->where(['product_id'=>$detail->Product_IDNo, 'branch_id'=>$purchase->PurchaseMaster_BranchID])->update('tbl_currentinventory');
-
+                $this->db->set('purchase_quantity', $newQty)->where(['product_id' => $detail->Product_IDNo, 'branch_id' => $purchase->PurchaseMaster_BranchID])->update('tbl_currentinventory');
             }
 
             /*Delete Purchase Details*/
-            $this->db->set('Status', 'd')->where('PurchaseMaster_IDNo',$data->purchaseId)->update('tbl_purchasedetails');
+            $this->db->set('Status', 'd')->where('PurchaseMaster_IDNo', $data->purchaseId)->update('tbl_purchasedetails');
 
             /*Delete Purchase Master Data*/
-            $this->db->set('status', 'd')->where('PurchaseMaster_SlNo',$data->purchaseId)->update('tbl_purchasemaster');
-            
-            $res = ['success'=>true, 'message'=>'Successfully deleted'];
-        } catch (Exception $ex){
-            $res = ['success'=>false, 'message'=>$ex->getMessage()];
+            $this->db->set('status', 'd')->where('PurchaseMaster_SlNo', $data->purchaseId)->update('tbl_purchasemaster');
+
+            $res = ['success' => true, 'message' => 'Successfully deleted'];
+        } catch (Exception $ex) {
+            $res = ['success' => false, 'message' => $ex->getMessage()];
         }
-        
+
         echo json_encode($res);
     }
 
@@ -1129,7 +1125,7 @@ class Purchase extends CI_Controller
 
     function addDamage()
     {
-        $res = ['success'=>false, 'message'=>''];
+        $res = ['success' => false, 'message' => ''];
         try {
             $data = json_decode($this->input->raw_input_stream);
 
@@ -1165,16 +1161,17 @@ class Purchase extends CI_Controller
                 and ci.branch_id = ?
             ", [$data->DamageDetails_DamageQuantity, $data->Product_SlNo, $this->session->userdata('BRANCHid')]);
 
-            $res = ['success'=>true, 'message'=>'Damage entry success', 'newCode' => $this->mt->generateDamageCode()];
-        } catch (Exception $ex){
-            $res = ['success'=>false, 'message'=>$ex->getMessage()];
+            $res = ['success' => true, 'message' => 'Damage entry success', 'newCode' => $this->mt->generateDamageCode()];
+        } catch (Exception $ex) {
+            $res = ['success' => false, 'message' => $ex->getMessage()];
         }
 
         echo json_encode($res);
     }
 
-    public function updateDamage(){
-        $res = ['success'=>false, 'message'=>''];
+    public function updateDamage()
+    {
+        $res = ['success' => false, 'message' => ''];
         try {
             $data = json_decode($this->input->raw_input_stream);
             $damageId = $data->Damage_SlNo;
@@ -1207,7 +1204,7 @@ class Purchase extends CI_Controller
             );
 
             $this->db->where('Damage_SlNo', $damageId)->update('tbl_damagedetails', $damageDetails);
-            
+
             $this->db->query("
                 update tbl_currentinventory ci 
                 set ci.damage_quantity = ci.damage_quantity + ? 
@@ -1215,19 +1212,20 @@ class Purchase extends CI_Controller
                 and ci.branch_id = ?
             ", [$data->DamageDetails_DamageQuantity, $data->Product_SlNo, $this->session->userdata('BRANCHid')]);
 
-            $res = ['success'=>true, 'message'=>'Damage updated successfully', 'newCode' => $this->mt->generateDamageCode()];
-        } catch (Exception $ex){
-            $res = ['success'=>false, 'message'=>$ex->getMessage()];
+            $res = ['success' => true, 'message' => 'Damage updated successfully', 'newCode' => $this->mt->generateDamageCode()];
+        } catch (Exception $ex) {
+            $res = ['success' => false, 'message' => $ex->getMessage()];
         }
 
         echo json_encode($res);
     }
 
-    public function getDamages(){
+    public function getDamages()
+    {
         $data = json_decode($this->input->raw_input_stream);
 
         $clauses = "";
-        if(isset($data->damageId) && $data->damageId != ''){
+        if (isset($data->damageId) && $data->damageId != '') {
             $clauses .= " and d.Product_SlNo = '$data->damageId'";
         }
         $damages = $this->db->query("
@@ -1251,8 +1249,9 @@ class Purchase extends CI_Controller
         echo json_encode($damages);
     }
 
-    public function deleteDamage(){
-        $res = ['success'=>false, 'message'=>''];
+    public function deleteDamage()
+    {
+        $res = ['success' => false, 'message' => ''];
         try {
             $data = json_decode($this->input->raw_input_stream);
             $damageId = $data->damageId;
@@ -1265,12 +1264,12 @@ class Purchase extends CI_Controller
                 and ci.branch_id = ?
             ", [$oldProduct->DamageDetails_DamageQuantity, $oldProduct->Product_SlNo, $this->session->userdata('BRANCHid')]);
 
-            $this->db->where('Damage_SlNo', $damageId)->update('tbl_damage', ['status'=>'d']);
-            $this->db->where('Damage_SlNo', $damageId)->update('tbl_damagedetails', ['status'=>'d']);
+            $this->db->where('Damage_SlNo', $damageId)->update('tbl_damage', ['status' => 'd']);
+            $this->db->where('Damage_SlNo', $damageId)->update('tbl_damagedetails', ['status' => 'd']);
 
-            $res = ['success'=>true, 'message'=>'Damage deleted successfully', 'newCode' => $this->mt->generateDamageCode()];
-        } catch (Exception $ex){
-            $res = ['success'=>false, 'message'=>$ex->getMessage()];
+            $res = ['success' => true, 'message' => 'Damage deleted successfully', 'newCode' => $this->mt->generateDamageCode()];
+        } catch (Exception $ex) {
+            $res = ['success' => false, 'message' => $ex->getMessage()];
         }
 
         echo json_encode($res);
@@ -1279,7 +1278,7 @@ class Purchase extends CI_Controller
     public function damage_product_list()
     {
         $access = $this->mt->userAccess();
-        if(!$access){
+        if (!$access) {
             redirect(base_url());
         }
         $data['title'] = "Product damage list";
@@ -1307,18 +1306,19 @@ class Purchase extends CI_Controller
         $this->load->view('Administrator/index', $data);
     }
 
-    public function getPurchasesImei(){
+    public function getPurchasesImei()
+    {
         $data = json_decode($this->input->raw_input_stream);
-        $get_p_inv = $this->db->query("SELECT PurchaseMaster_InvoiceNo FROM tbl_purchasemaster WHERE PurchaseMaster_SlNo=?",$data->purchaseId)->result_array();
+        $get_p_inv = $this->db->query("SELECT PurchaseMaster_InvoiceNo FROM tbl_purchasemaster WHERE PurchaseMaster_SlNo=?", $data->purchaseId)->result_array();
         $purchaseInvoice = $get_p_inv[0]['PurchaseMaster_InvoiceNo'];
-        $imeis = $this->db->query("SELECT ps_imei_number,ps_prod_id FROM tbl_product_serial_numbers WHERE ps_purchase_inv=?",$purchaseInvoice)->result();
+        $imeis = $this->db->query("SELECT ps_imei_number,ps_prod_id FROM tbl_product_serial_numbers WHERE ps_purchase_inv=?", $purchaseInvoice)->result();
         echo json_encode($imeis);
     }
 
     public function returns_list()
     {
         $access = $this->mt->userAccess();
-        if(!$access){
+        if (!$access) {
             redirect(base_url());
         }
         $data['title'] = "Purchase Return";
@@ -1343,7 +1343,7 @@ class Purchase extends CI_Controller
         $data['title'] = "Product Purchase Update";
         $data['pm_sup'] = $pm_sup = $this->Billing_model->select_supplier_purhase_master($PurchaseMaster_SlNo);
         $data['product_purchase_det'] = $cartData =  $this->Billing_model->select_product_parchase_details($PurchaseMaster_SlNo);
-        $this->_purchase_update_add_cart($cartData,$pm_sup);
+        $this->_purchase_update_add_cart($cartData, $pm_sup);
         $data['products'] = $this->Product_model->products_by_brunch();
 
         $data['content'] = $this->load->view('Administrator/purchase/purchase_order_update', $data, TRUE);
@@ -1351,9 +1351,10 @@ class Purchase extends CI_Controller
     }
 
     /*Used to add product details to cart for update product purchase.... called in purchase_update_form()*/
-    private function _purchase_update_add_cart($cartData,$pm_sup){
+    private function _purchase_update_add_cart($cartData, $pm_sup)
+    {
 
-        foreach ($cartData as $data):
+        foreach ($cartData as $data) :
             $insert_data = array(
                 'id' => $data->Product_SlNo,
                 'ProCat' => $data->ProductCategory_ID,
@@ -1368,7 +1369,7 @@ class Purchase extends CI_Controller
                 'PurchaseMaster_InvoiceNo' => $pm_sup->PurchaseMaster_InvoiceNo,
                 'PurchaseMaster_PaidAmount' => $pm_sup->PurchaseMaster_PaidAmount,
             );
-        $this->cart->insert($insert_data);
+            $this->cart->insert($insert_data);
         endforeach;
     }
 
@@ -1460,8 +1461,8 @@ class Purchase extends CI_Controller
         $this->Billing_model->update_supplier_payment_data("tbl_supplier_payment", $data, $purchInvoice);
 
         /*CartData Insert Or Update to purchase details */
-        if ($cart = $this->cart->contents()){
-            foreach ($cart as $item){
+        if ($cart = $this->cart->contents()) {
+            foreach ($cart as $item) {
                 $order_detail = array(
                     'PurchaseMaster_IDNo' => $purch_id,
                     'Product_IDNo' => $item['id'],
@@ -1471,16 +1472,16 @@ class Purchase extends CI_Controller
                     'UpdateTime' => date('Y-m-d H:i:s')
                 );
 
-                $oldPurchaseDetail =  $this->db->where('PurchaseMaster_IDNo',$purch_id)->where('Product_IDNo',$item['id'])->get('tbl_purchasedetails')->row();
-                if(count($oldPurchaseDetail)>0):
+                $oldPurchaseDetail =  $this->db->where('PurchaseMaster_IDNo', $purch_id)->where('Product_IDNo', $item['id'])->get('tbl_purchasedetails')->row();
+                if (count($oldPurchaseDetail) > 0) :
 
                     /*update old details*/
-                    $this->db->where('PurchaseMaster_IDNo',$purch_id)->where('Product_IDNo',$item['id'])->update('tbl_purchasedetails',$order_detail);
+                    $this->db->where('PurchaseMaster_IDNo', $purch_id)->where('Product_IDNo', $item['id'])->update('tbl_purchasedetails', $order_detail);
                     $newQty  = $item['qty'] - $oldPurchaseDetail->PurchaseDetails_TotalQuantity;
                     $item['qty'] = $newQty;
                     $this->_addStock($item);
 
-                else:
+                else :
 
                     /*insert new details*/
                     $this->Billing_model->update_purchase_detail($order_detail);
@@ -1494,42 +1495,41 @@ class Purchase extends CI_Controller
                 $Pfld = 'Product_SlNo';
                 $ProductPrice = array('Product_Purchase_Rate' => $item['price'],);
                 $this->mt->update_data("tbl_product", $ProductPrice, $Pid, $Pfld);
-
-            }// end foreach
-        }// end if
+            } // end foreach
+        } // end if
 
         $this->cart->destroy();
         $xx['purchaseforprint'] = $purch_id;
         $this->session->set_userdata($xx);
         echo json_encode(true);
-
     }
 
     /*Used in Purchase Update*/
-    private function _addStock($item){
+    private function _addStock($item)
+    {
         // Stock add
-        $rox = $this->db->where('product_id',$item['id'])->get('tbl_currentinventory')->row();
+        $rox = $this->db->where('product_id', $item['id'])->get('tbl_currentinventory')->row();
         $id = $rox->inventory_id;
         $oldStock = $rox->purchase_quantity;
 
-        if($rox->product_id == $item['id']){
+        if ($rox->product_id == $item['id']) {
             $addStock = array(
                 'product_id'           => $item['id'],
-                'purchase_quantity'=> $oldStock+$item['qty']
+                'purchase_quantity' => $oldStock + $item['qty']
             );
-            $this->mt->update_data("tbl_currentinventory",$addStock,$id,'inventory_id');
-        }else{
+            $this->mt->update_data("tbl_currentinventory", $addStock, $id, 'inventory_id');
+        } else {
             $addStock = array(
                 'product_id'                     => $item['id'],
                 'purchase_quantity' => $item['qty']
             );
-            $this->mt->save_data("tbl_currentinventory",$addStock);
+            $this->mt->save_data("tbl_currentinventory", $addStock);
         }
     }
 
     function select_supplier()
     {
-        ?>
+?>
         <div class="form-group">
             <label class="col-sm-2 control-label no-padding-right" for="Supplierid"> Select Supplier </label>
             <div class="col-sm-3">
@@ -1546,12 +1546,12 @@ class Purchase extends CI_Controller
                 </select>
             </div>
         </div>
-        <?php
+    <?php
     }
 
     function select_product()
     {
-        ?>
+    ?>
         <div class="form-group">
             <label class="col-sm-2 control-label no-padding-right" for="Productid"> Select Product </label>
             <div class="col-sm-3">
@@ -1568,7 +1568,6 @@ class Purchase extends CI_Controller
                 </select>
             </div>
         </div>
-        <?php
+<?php
     }
-
 }
