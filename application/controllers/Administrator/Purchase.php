@@ -502,7 +502,7 @@ class Purchase extends CI_Controller
                     ", [$product->quantity, $product->productId, $this->session->userdata('BRANCHid')]);
                 }
 
-                $this->db->query("update tbl_product set Product_Purchase_Rate = ?, Product_SellingPrice = ? where Product_SlNo = ?", [$product->purchaseRate, $product->salesRate, $product->productId]);
+                // $this->db->query("update tbl_product set Product_Purchase_Rate = ?, Product_SellingPrice = ? where Product_SlNo = ?", [$product->purchaseRate, $product->salesRate, $product->productId]);
 
                 /// 
 

@@ -404,7 +404,7 @@ class Products extends CI_Controller
                     p.Product_Code,
                     p.Product_ReOrederLevel,
                     p.is_imei,
-                    (select (p.Product_Purchase_Rate * current_quantity)) as stock_value,
+                    (select sum(PurchaseDetails_TotalAmount) from tbl_purchasedetails  where Product_IDNo=p.Product_SlNo) as stock_value,
                     pc.ProductCategory_Name,
                     b.brand_name,
                     u.Unit_Name,
@@ -504,7 +504,7 @@ class Products extends CI_Controller
                         and tm.transfer_to = '$branchId') as transfered_to_quantity,
                         
                 (select (purchased_quantity + sales_returned_quantity + transfered_to_quantity) - (sold_quantity + purchase_returned_quantity + damaged_quantity + transfered_from_quantity)) as current_quantity,
-                (select p.Product_Purchase_Rate * current_quantity) as stock_value
+                (select sum(PurchaseDetails_TotalAmount) from tbl_purchasedetails  where Product_IDNo=p.Product_SlNo) as stock_value
                 , (select sum(purchase_total) as purchase_total from  tbl_product_serial_numbers where ps_prod_id=p.Product_SlNo AND ps_p_r_status<>'yes' AND ps_brunch_id='" . $branchId . "'  AND   (ps_s_status IS NULL OR ps_s_status<>'yes'   OR ps_s_r_status='yes') ) as purchase_total_am 
             from tbl_product p
             left join tbl_productcategory pc on pc.ProductCategory_SlNo = p.ProductCategory_ID

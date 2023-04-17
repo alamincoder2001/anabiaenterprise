@@ -744,8 +744,8 @@
 					quantity: this.Is_IMEI != "true" ? this.selectedIEMI.quantity : 1,
 					total: this.selectedIEMI.total,
 					purchaseRate: this.selectedIEMI.Product_Purchase_Rate,
-					purchase_discount: this.selectedIEMI.purchase_discount,
 					SaleDetails_Discount: this.selectedIEMI.SaleDetails_Discount,
+					purchase_discount: this.selectedIEMI.discount,
 					IMEIStore: [{
 						ps_imei_number: this.selectedIEMI.ps_imei_number
 					}]
